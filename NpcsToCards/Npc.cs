@@ -11,34 +11,30 @@ namespace NpcsToCards
     public class Npc
     {
         //Use the StringFormat class for the text layout of our document
-        private readonly StringFormat _format = new StringFormat(StringFormatFlags.LineLimit);
+        private readonly StringFormat _formatLeft = new StringFormat(StringFormatFlags.LineLimit);
 
-        [XmlAttribute]
-        public string Appearance;
+        private readonly StringFormat _formatRight = new StringFormat(StringFormatFlags.LineLimit)
+        {
+            Alignment = StringAlignment.Far
+        };
 
-        [XmlAttribute]
-        public string Background;
+        [XmlAttribute] public string Appearance;
 
-        [XmlAttribute]
-        public string Motivation;
+        [XmlAttribute] public string Background;
 
-        [XmlAttribute]
-        public int NpcId;
+        [XmlAttribute] public string Motivation;
 
-        [XmlAttribute]
-        public string NpcName;
+        [XmlAttribute] public int NpcId;
 
-        [XmlAttribute]
-        public string Personality;
+        [XmlAttribute] public string NpcName;
 
-        [XmlAttribute]
-        public string QuoteFromNpc;
+        [XmlAttribute] public string Personality;
 
-        [XmlAttribute]
-        public string Roleplaying;
+        [XmlAttribute] public string QuoteFromNpc;
 
-        [XmlAttribute]
-        public string Title;
+        [XmlAttribute] public string Roleplaying;
+
+        [XmlAttribute] public string Title;
 
         public List<string> Traits;
 
@@ -60,14 +56,16 @@ namespace NpcsToCards
             Background = background;
             Traits = ToTraits(traits);
 
-            if (QuoteFromNpc.IsNotEmpty())
-            {
-                QuoteFromNpc = QuoteFromNpc.Replace("“", string.Empty).Replace("”", string.Empty);
-                if (QuoteFromNpc.StartsWith("\""))
-                    QuoteFromNpc = QuoteFromNpc.Substring(1);
-                if (QuoteFromNpc.EndsWith("\""))
-                    QuoteFromNpc = QuoteFromNpc.Substring(0, QuoteFromNpc.Length - 1);
-            }
+            /*
+                        if (QuoteFromNpc.IsNotEmpty())
+                        {
+                            QuoteFromNpc = QuoteFromNpc.Replace("“", "\"").Replace("”", string.Empty);
+                            if (QuoteFromNpc.StartsWith("\""))
+                                QuoteFromNpc = QuoteFromNpc.Substring(1);
+                            if (QuoteFromNpc.EndsWith("\""))
+                                QuoteFromNpc = QuoteFromNpc.Substring(0, QuoteFromNpc.Length - 1);
+                        }
+            */
             Appearance = Appearance.TokensAfterFirst(": ");
             Roleplaying = Roleplaying.TokensAfterFirst(": ");
             Personality = Personality.TokensAfterFirst(": ");
@@ -105,7 +103,7 @@ namespace NpcsToCards
         private List<string> ToTraits(string line)
         {
             line = line.TokensAfterFirst(": ");
-            var ret = new List<string> { line.FirstToken(" ") };
+            var ret = new List<string> {line.FirstToken(" ")};
             ret.AddRange(line.TokensAfterFirst(" ").Split(','));
             for (var i = 0; i < ret.Count; i++)
             {
@@ -142,24 +140,13 @@ namespace NpcsToCards
             Traits: (bold) [Trait list]
             */
 
-            var newArea = Render(document.PrinterFontBold, graphics, NpcId.ToString(), area, 6);
-            if (newArea.Height <= 0) return;
-
-            newArea = Render(document.PrinterFont, graphics, Title, newArea, 4);
-            if (newArea.Height <= 0) return;
+            var newArea = Render(document.PrinterFontBold, graphics, NpcId + " " + NpcName, area, 6);
+            Render(document.PrinterFont, graphics, Title, area, 4, true);
 
             newArea = Render(document.PrinterFontItalics, graphics, QuoteFromNpc, newArea, 2);
-            if (newArea.Height <= 0) return;
-
             newArea = Render(document, document.PrinterFont, graphics, "Appearance", Appearance, newArea);
-            if (newArea.Height <= 0) return;
-
             newArea = Render(document, document.PrinterFont, graphics, "Roleplaying", Roleplaying, newArea);
-            if (newArea.Height <= 0) return;
-
             newArea = Render(document, document.PrinterFont, graphics, "Personality", Personality, newArea);
-            if (newArea.Height <= 0) return;
-
             newArea = Render(document, document.PrinterFont, graphics, "Motivation", Motivation, newArea);
             if (newArea.Height <= 0) return;
 
@@ -169,7 +156,8 @@ namespace NpcsToCards
             Render(document, document.PrinterFont, graphics, "Traits", RenderableTraits, newArea);
         }
 
-        private RectangleF Render(Font font, Graphics graphics, string text, RectangleF area, int relativeFontSize = 0)
+        private RectangleF Render(Font font, Graphics graphics, string text, RectangleF area, int relativeFontSize = 0,
+            bool alignRight = false)
         {
             if (text.IsEmpty())
             {
@@ -177,8 +165,9 @@ namespace NpcsToCards
             }
 
             var f = relativeFontSize == 0 ? font : new Font(font.FontFamily, font.Size + relativeFontSize);
-            var textArea = graphics.MeasureString(text, f, area.Size, _format);
-            graphics.DrawString(text, f, Brushes.Black, area, _format);
+            var alignment = alignRight ? _formatRight : _formatLeft;
+            var textArea = graphics.MeasureString(text, f, area.Size, alignment);
+            graphics.DrawString(text, f, Brushes.Black, area, alignment);
             if (area.Height - textArea.Height <= 0)
             {
                 // No room left
@@ -195,13 +184,14 @@ namespace NpcsToCards
                 return area;
             }
 
-            //SizeF labelArea = graphics.MeasureString(label, document.PrinterFontBold, area.Size, _format);
-            graphics.DrawString(label, document.PrinterFontBold, Brushes.Black, area, _format);
+            label += ": ";
 
-            text = new string(' ', label.Length + 2) + text;
+            graphics.DrawString(label, document.PrinterFontBold, Brushes.Black, area, _formatLeft);
+
+            text = new string(' ', 25) + text;
             var f = relativeFontSize == 0 ? font : new Font(font.FontFamily, font.Size + relativeFontSize);
-            var textArea = graphics.MeasureString(text, f, area.Size, _format);
-            graphics.DrawString(text, f, Brushes.Black, area, _format);
+            var textArea = graphics.MeasureString(text, f, area.Size, _formatLeft);
+            graphics.DrawString(text, f, Brushes.Black, area, _formatLeft);
 
             if (area.Height - textArea.Height <= 0)
             {

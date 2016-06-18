@@ -10,7 +10,7 @@ namespace NpcsToCards
         public int CardHeight;
         public int[] CardTops;
         public string FontName;
-        public int FontSize = 10;
+        public int FontSize = 8;
         public int NextCardIndex;
         public List<Npc> Npcs;
 
@@ -49,7 +49,7 @@ namespace NpcsToCards
         {
             Npcs = new List<Npc>();
             NextCardIndex = 0;
-            FontName = "Times New Roman";
+            FontName = "Calibri";
         }
 
         /// <summary>
@@ -64,11 +64,7 @@ namespace NpcsToCards
 
             if (FontName.IsEmpty())
             {
-                FontName = "Times New Roman";
-            }
-            if (FontSize < 10)
-            {
-                FontSize = 10;
+                FontName = "Calibri";
             }
 
             if (PrinterFont == null)
@@ -79,6 +75,11 @@ namespace NpcsToCards
                 PrinterFontItalics = new Font(FontName, FontSize, FontStyle.Italic);
                 PrinterFontBoldItalics = new Font(FontName, FontSize, FontStyle.Bold | FontStyle.Italic);
             }
+
+            var leftRightGutterWidth = (850 - 500)/2;
+            var topBottomGutterWidth = (1100 - (300*3))/2;
+            DefaultPageSettings.Margins = new Margins(leftRightGutterWidth, leftRightGutterWidth, topBottomGutterWidth,
+                topBottomGutterWidth);
 
             //Set print area size and margins
             PrintHeight = DefaultPageSettings.PaperSize.Height

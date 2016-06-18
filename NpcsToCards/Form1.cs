@@ -18,21 +18,39 @@ namespace NpcsToCards
 
         private void button1_Click(object sender, EventArgs e)
         {
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
             var sb = new StringBuilder(NpcTexts.FantacyAllies);
 
-            using (var memory = new MemoryStream(Encoding.ASCII.GetBytes(NpcTexts.FantacyAllies)))
+            using (var memory = new MemoryStream(Encoding.UTF8.GetBytes(NpcTexts.FantacyAllies)))
             using (var streamReader = new StreamReader(memory))
             {
                 var reader = new NpcReader(streamReader);
                 reader.ReadAll();
                 document.Npcs = reader.Npcs;
             }
-            if (printPreviewDialog.ShowDialog(this) == DialogResult.OK)
+            /*
+                        if (printPreview.ShowDialog(this) == DialogResult.OK)
+                        {
+                            if (printDialog.ShowDialog(this) == DialogResult.OK)
+                            {
+                                document.Print();
+                            }
+                        }
+            */
+        }
+
+        private void printPreviewDialog_Load(object sender, EventArgs e)
+        {
+        }
+
+        private void printPreviewControl1_DoubleClick(object sender, EventArgs e)
+        {
+            if (printDialog.ShowDialog(this) == DialogResult.OK)
             {
-                if (printDialog.ShowDialog(this) == DialogResult.OK)
-                {
-                    document.Print();
-                }
+                document.Print();
             }
         }
     }
